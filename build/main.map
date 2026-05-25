@@ -85,7 +85,7 @@ CODE                                0000802D    00000043 =          67. bytes (R
 
 Files Linked                              [ module(s) ]
 
-main.rel                                  [ main ]
+build/main.rel                            [ main ]
 
 
 Libraries Linked                          [ object file ]

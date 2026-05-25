@@ -1,63 +1,62 @@
 # Target microcontroller and programmer settings
-MCU      = stm8s003k3
+MCU        = stm8s003k3
 PROGRAMMER = stlink
 FLASH_EXE  = ~/stm8flash/stm8flash.exe
 
-
-# Source file and output name
-TARGET   = main
-SRC      = $(TARGET).c
-
+# Project settings
+TARGET     = main
+SRC        = $(TARGET).c
+BUILD_DIR  = build
 
 # Compiler settings
-CC       = sdcc
-CFLAGS   = -mstm8
+CC         = sdcc
+CFLAGS     = -mstm8
 
+# Output file inside build directory
+OUT        = $(BUILD_DIR)/$(TARGET)
 
-# Default target: just compile the code
-all: $(TARGET).ihx
+# Default target
+all: $(OUT).ihx
 
+# Create build directory automatically
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-$(TARGET).ihx: $(SRC)
-	$(CC) $(CFLAGS) $(SRC)
+# Compile
+$(OUT).ihx: $(SRC) | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $(OUT).ihx $(SRC)
 
-
-# Flash the compiled firmware and automatically reset the MCU
-flash: $(TARGET).ihx
-	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -w $(TARGET).ihx
+# Flash firmware
+flash: $(OUT).ihx
+	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -w $(OUT).ihx
 	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -R
 
-
-# Erase the flash memory (overwrites the 8KB flash area with 0x00)
+# Erase flash memory
 erase:
-	dd if=/dev/zero of=blank.bin bs=1024 count=8 2>/dev/null
-	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -w blank.bin
-	rm -f blank.bin
+	dd if=/dev/zero of=$(BUILD_DIR)/blank.bin bs=1024 count=8 2>/dev/null
+	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -w $(BUILD_DIR)/blank.bin
+	rm -f $(BUILD_DIR)/blank.bin
 
-# Read and display the EEPROM / Data memory area
-# (STM8S003K3 has 640 bytes of EEPROM starting at 0x4000)
+# Read EEPROM
 read_eeprom:
-	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -r eeprom_dump.bin -s eeprom
+	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -r $(BUILD_DIR)/eeprom_dump.bin -s eeprom
 
-
-# Read and display the Option Bytes (configures hardware features)
+# Read option bytes
 read_options:
-	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -r opt_dump.bin -s opt
+	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -r $(BUILD_DIR)/opt_dump.bin -s opt
 
-
-# Run this ONLY if your chip becomes write-protected/locked up
+# Unlock MCU
 unlock:
 	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -u
 
-
-# Reset the MCU manually without flashing
+# Reset MCU
 reset:
 	$(FLASH_EXE) -c $(PROGRAMMER) -p $(MCU) -R
 
-
-# Clean up all compiler generated artifacts safely
+# Clean build directory
 clean:
-	rm -f *.asm *.ihx *.lk *.map *.rel *.rst *.sym *.cdb *.lst eeprom_dump.bin opt_dump.bin
+	rm -rf $(BUILD_DIR)
+
+.PHONY: all flash erase read_eeprom read_options unlock reset clean
 
 
-.PHONY: all flash erase read_eeprom read_options reset clean
