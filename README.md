@@ -2,6 +2,9 @@
 
 Bare-metal STM8S003K3 development using:
 
+***STM8S003k3 value line discovery board***
+
+
 - MSYS2 UCRT64
 - SDCC
 - stm8flash
@@ -86,19 +89,14 @@ sdcc -mstm8 main.c
 stm8flash -c stlink -p stm8s003k3 -w main.ihx
 ```
 
-LED should blink.
+Onboard LED should blink.
 
 ---
-
-## 8. Using Makefile
-
-Makefile makes our work easy! 
-Create Makefile, clean, compile and flash:
+## 7. Or else you can Clone repository, build and flash the project :
 
 ```bash
-nano Makefile
+git clone https://github.com/ManikandaMeyyappan/stm8_cli.git
 make clean
-make
+make 
 make flash
 ```
-
